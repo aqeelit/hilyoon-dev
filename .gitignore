@@ -1,0 +1,6 @@
+.next/
+.env.local
+.env
+dist/
+*.log
+.DS_Store

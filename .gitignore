@@ -4,3 +4,11 @@
 dist/
 *.log
 .DS_Store
+
+# Dependencies
+node_modules/
+
+# Backend secrets and runtime files (copy config/env.example.php -> config/env.php locally)
+backend/config/env.php
+backend/.env
+backend/logs/

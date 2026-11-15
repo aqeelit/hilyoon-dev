@@ -9,27 +9,29 @@ Legend: `[x]` done **and tested** · `[~]` in progress · `[ ]` to do · `[!]` b
 
 | Item | State |
 |---|---|
-| Branches | `dev` 11dee9f · `main` 3bea29a · `pro` d2c9579 |
-| Production (`/opt/hilyoon` on 150.241.128.83) | running **pro d2c9579** + backup hotfix from `dev` 11dee9f; all 4 services healthy |
-| hilyoon.com DNS | still points to the **old server 51.15.184.145** (as does `mail.hilyoon.com`) |
-| Public access | **not live yet** — needs the PackNAI change in `main`, the Caddy site file, and DNS |
-| Admin user in production | **none yet** (database has 0 users by design) |
+| **hilyoon.com** | **LIVE since 2026-11-15 ~20:05** over HTTPS (Let's Encrypt, auto-renewed by Caddy; current cert valid to 2027-02-13) |
+| Branches | `dev` e01e739 · `main` a75a446 · `pro` 45db63f — identical files |
+| Production (`/opt/hilyoon` on 150.241.128.83) | images from pro d2c9579 + backup fix (same files as pro 45db63f apart from docs); 4 services healthy, ~150 MB RAM |
+| PackNAI | release 411c0eb (shared Caddy: `import /etc/caddy/sites/*.caddy`, `web` network) deployed by its CI; packnai.com unaffected |
+| DNS | `hilyoon.com` + `www` → 150.241.128.83; `mail.hilyoon.com` + MX unchanged → 51.15.184.145 |
+| Admin user in production | **none yet** — create it (command below) |
 
-## Go-live checklist (in order)
+## Go-live checklist
 
 - [x] Server prep: Docker network `web`, `/opt/hilyoon`, `/opt/caddy-sites`, 2 GB swap (persistent, swappiness 10)
 - [x] Hilyoon stack built on the server and started; secrets generated in `/opt/hilyoon/.env` (mode 600)
-- [x] Internal tests over the `web` network: 27/27 (site in 3 languages, API + MariaDB, admin page, private paths blocked)
-- [x] Daily backup produces real dumps (5.8 KB, 11 tables + 3 procedures) — after the fix below
-- [ ] **Merge the backup fix `dev` → `main` → `pro`** (11dee9f). Until then a redeploy of `pro` would bring back the broken backup
-- [~] PackNAI change (`aqeelit/milmar-dev`, branch `feat/caddy-extra-sites`, commit 9ae6d26): **merged into PackNAI `dev`, not yet in `main`**. Next: reviewed PR `dev` → `main`; PackNAI CI + auto-deploy then recreates its Caddy (few seconds of downtime for packnai.com)
-- [ ] Create the production admin (from PowerShell on the PC):
+- [x] Internal tests over the `web` network: 27/27
+- [x] Daily backup produces real dumps (5.8 KB, 11 tables + 3 procedures); fix merged to `pro` (45db63f)
+- [x] PackNAI change merged (PR #64 → `dev`, PR #65 → `main` 411c0eb), CI passed, auto-deployed; Caddy recreated with the sites mount + `web` network
+- [x] DNS switched (email records untouched)
+- [x] `/opt/caddy-sites/hilyoon.caddy` installed (validated against PackNAI's new Caddyfile first); certificates for hilyoon.com + www obtained automatically
+- [x] **Live tests on https://hilyoon.com: 39/40 + browser 11/11** — certificate, http→https, www→apex, 3 languages, MedPredix, blog, sitemap, API + MariaDB, admin login (CSRF, no credentials), all private paths 404, `/api-test` 404, HSTS, no Server header; browser uses same-origin `/api`, no console errors; packnai.com healthy
+- [x] PackNAI worktree removed (`feat/caddy-extra-sites` merged and deleted locally)
+- [ ] **Create the production admin** (from PowerShell on the PC; password typed hidden):
   `ssh -t -o ServerAliveInterval=20 -i "$env:USERPROFILE\.ssh\packnai_key" root@150.241.128.83 'read -rsp Password: HILYOON_ADMIN_PASSWORD; echo; export HILYOON_ADMIN_PASSWORD; cd /opt/hilyoon; docker compose -f docker-compose.prod.yml exec -e HILYOON_ADMIN_PASSWORD backend php scripts/create-admin.php aqeel@hilyoon.com Aqeel'`
-  (first attempt on 2026-11-15 failed: SSH connection dropped at the password prompt; nothing was created)
-- [ ] DNS: `hilyoon.com` and `www.hilyoon.com` A → `150.241.128.83`. **Leave `mail.hilyoon.com`, MX, SPF/DKIM/DMARC unchanged** (email stays on 51.15.184.145)
-- [ ] After PackNAI `main` deploy + DNS: install `/opt/caddy-sites/hilyoon.caddy`, validate, `caddy reload` (CLAUDE.md §7 step 3), then verify `https://hilyoon.com` (certificate issued automatically) and that `https://packnai.com` is unaffected
-- [ ] Afterwards: remove the PackNAI worktree `Desktop/milmar/packnai-extra-sites` (`git worktree remove` from the PackNAI clone)
-- [ ] Optional: add the AI blog cron (only with `OPENAI_API_KEY` set) — DEPLOY.md → Operations
+- [ ] Minor: `/` redirects twice (`/` → `/en/` → `/en`); make the middleware redirect straight to `/en` (`frontend/src/middleware.ts`)
+- [ ] Optional: AI blog cron (only with `OPENAI_API_KEY` set) — DEPLOY.md → Operations
+- [ ] Optional: old server 51.15.184.145 still hosts the old site and **the email** — don't shut it down without moving mail first
 
 ## Done (all tested)
 
@@ -69,3 +71,4 @@ Legend: `[x]` done **and tested** · `[~]` in progress · `[ ]` to do · `[!]` b
 | 2026-11-15 | Markovate-inspired redesign for AI engineering; dark theme; official logo; MedPredix project page; logo-red accents |
 | 2026-11-15 | Full test pass (76 checks) → pushed to GitHub with `main` / `pro` / `dev`; security fixes on `dev` |
 | 2026-11-15 | Docker setup; server inspection; server prep + Hilyoon stack deployed (not public yet); backup bug found and fixed; PackNAI change pushed and merged into PackNAI `dev` |
+| 2026-11-15 | PackNAI release 411c0eb deployed by its CI; DNS switched; **hilyoon.com live** with HTTPS; live tests 39/40 + browser 11/11; `main` → `pro` merged (45db63f) |

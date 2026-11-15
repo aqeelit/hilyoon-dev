@@ -14,7 +14,7 @@ Legend: `[x]` done **and tested** · `[~]` in progress · `[ ]` to do · `[!]` b
 | Production (`/opt/hilyoon` on 150.241.128.83) | images from pro d2c9579 + backup fix (same files as pro 45db63f apart from docs); 4 services healthy, ~150 MB RAM |
 | PackNAI | release 411c0eb (shared Caddy: `import /etc/caddy/sites/*.caddy`, `web` network) deployed by its CI; packnai.com unaffected |
 | DNS | `hilyoon.com` + `www` → 150.241.128.83; `mail.hilyoon.com` + MX unchanged → 51.15.184.145 |
-| Admin user in production | **none yet** — create it (command below) |
+| Admin user in production | `aqeel@hilyoon.com` (id 1, admin, active) created 2026-11-15 |
 
 ## Go-live checklist
 
@@ -27,7 +27,7 @@ Legend: `[x]` done **and tested** · `[~]` in progress · `[ ]` to do · `[!]` b
 - [x] `/opt/caddy-sites/hilyoon.caddy` installed (validated against PackNAI's new Caddyfile first); certificates for hilyoon.com + www obtained automatically
 - [x] **Live tests on https://hilyoon.com: 39/40 + browser 11/11** — certificate, http→https, www→apex, 3 languages, MedPredix, blog, sitemap, API + MariaDB, admin login (CSRF, no credentials), all private paths 404, `/api-test` 404, HSTS, no Server header; browser uses same-origin `/api`, no console errors; packnai.com healthy
 - [x] PackNAI worktree removed (`feat/caddy-extra-sites` merged and deleted locally)
-- [ ] **Create the production admin** (from PowerShell on the PC; password typed hidden):
+- [x] Production admin `aqeel@hilyoon.com` created (bcrypt hash stored). **Change its password after the first login**: the initial one was shared in a chat. Reset = same command, same email:
   `ssh -t -o ServerAliveInterval=20 -i "$env:USERPROFILE\.ssh\packnai_key" root@150.241.128.83 'read -rsp Password: HILYOON_ADMIN_PASSWORD; echo; export HILYOON_ADMIN_PASSWORD; cd /opt/hilyoon; docker compose -f docker-compose.prod.yml exec -e HILYOON_ADMIN_PASSWORD backend php scripts/create-admin.php aqeel@hilyoon.com Aqeel'`
 - [ ] Minor: `/` redirects twice (`/` → `/en/` → `/en`); make the middleware redirect straight to `/en` (`frontend/src/middleware.ts`)
 - [ ] Optional: AI blog cron (only with `OPENAI_API_KEY` set) — DEPLOY.md → Operations

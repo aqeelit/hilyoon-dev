@@ -80,7 +80,7 @@ chmod 755 backend/public/images/blog
 ### Automated Generation:
 
 **Option 1: Web Cron (Recommended for XAMPP)**
-- Visit: `http://localhost/hilyoon-backend/automation/cron-scheduler.php?cron_key=hilyoon_blog_automation_2024`
+- Call `http://localhost/hilyoon-backend/automation/cron-scheduler.php` with header `X-Cron-Key: <CRON_SECRET>` (set `CRON_SECRET` in `backend/config/env.php`), or run it from the CLI: `php backend/automation/cron-scheduler.php`
 - Set up with online cron services like cron-job.org
 
 **Option 2: System Cron (Linux/Mac)**

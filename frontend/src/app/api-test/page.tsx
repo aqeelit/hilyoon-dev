@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { API_BASE_URL } from '@/lib/api/blog'
 
 interface ApiStatus {
   name: string
@@ -14,6 +15,8 @@ export default function ApiTestPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loginResult, setLoginResult] = useState<Record<string, unknown> | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   useEffect(() => {
     testApiConnection()
@@ -22,7 +25,7 @@ export default function ApiTestPage() {
   const testApiConnection = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('http://localhost/hilyoon-backend/api/status')
+      const response = await fetch(`${API_BASE_URL}/status`)
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -47,15 +50,12 @@ export default function ApiTestPage() {
     try {
       setLoginResult(null)
       
-      const response = await fetch('http://localhost/hilyoon-backend/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: 'admin@hilyoon.com',
-          password: 'admin123'
-        })
+        body: JSON.stringify({ email, password })
       })
 
       const data = await response.json()
@@ -73,7 +73,7 @@ export default function ApiTestPage() {
 
   const testBlogPosts = async () => {
     try {
-      const response = await fetch('http://localhost/hilyoon-backend/api/blog/posts?locale=en&limit=5')
+      const response = await fetch(`${API_BASE_URL}/blog/posts?locale=en&limit=5`)
       const data = await response.json()
       console.log('Blog posts:', data)
       alert('Blog posts response logged to console')
@@ -92,7 +92,7 @@ export default function ApiTestPage() {
         return
       }
 
-      const response = await fetch('http://localhost/hilyoon-backend/api/admin/dashboard', {
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -156,12 +156,31 @@ export default function ApiTestPage() {
               {/* Authentication Test */}
               <div>
                 <h2 className="text-xl font-semibold mb-4">🔐 Authentication Test</h2>
-                <button
-                  onClick={testLogin}
-                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-4"
-                >
-                  🔑 Test Login (admin@hilyoon.com)
-                </button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    autoComplete="username"
+                    className="rounded border border-gray-300 px-3 py-2 text-gray-900"
+                  />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    autoComplete="current-password"
+                    className="rounded border border-gray-300 px-3 py-2 text-gray-900"
+                  />
+                  <button
+                    onClick={testLogin}
+                    disabled={!email || !password}
+                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    🔑 Test Login
+                  </button>
+                </div>
                 
                 {loginResult && (
                   <div className={`mt-4 p-4 rounded ${loginResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
@@ -201,7 +220,7 @@ export default function ApiTestPage() {
                 <h3 className="font-medium text-blue-800 mb-2">🔗 Integration Details</h3>
                 <div className="text-sm text-blue-700 space-y-1">
                   <div><strong>Frontend:</strong> http://localhost:3000</div>
-                  <div><strong>Backend API:</strong> http://localhost/hilyoon-backend/api</div>
+                  <div><strong>Backend API:</strong> {API_BASE_URL}</div>
                   <div><strong>Database:</strong> MySQL via XAMPP (hilyoon_saas)</div>
                   <div><strong>Authentication:</strong> JWT tokens</div>
                 </div>

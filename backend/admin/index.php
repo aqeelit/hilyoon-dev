@@ -1,28 +1,77 @@
 <?php
+require_once __DIR__ . '/../utils/auth.php';
+require_once __DIR__ . '/../models/User.php';
+
+// Hardened session cookie
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+]);
 session_start();
 
-// Simple login check - if already logged in, redirect to dashboard
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+// Already logged in
+if (!empty($_SESSION['admin_logged_in'])) {
     header('Location: dashboard.php');
     exit;
 }
 
-// Handle login form submission
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_SECONDS = 300;
+
+$error = null;
+$locked_until = $_SESSION['login_locked_until'] ?? 0;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    
-    // Simple hardcoded admin credentials
-    if ($email === 'admin@hilyoon.com' && $password === 'admin123') {
-        $_SESSION['admin_logged_in'] = true;
-        $_SESSION['admin_email'] = $email;
-        $_SESSION['admin_name'] = 'Admin User';
-        $_SESSION['admin_role'] = 'admin';
-        
-        header('Location: dashboard.php');
-        exit;
+    if (time() < $locked_until) {
+        $error = 'Too many failed attempts. Try again in a few minutes.';
+    } elseif (!hash_equals($_SESSION['csrf_token'], (string)($_POST['csrf_token'] ?? ''))) {
+        $error = 'Your session expired. Please try again.';
     } else {
-        $error = 'Invalid email or password';
+        $email = trim((string)($_POST['email'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+
+        $user = new User();
+        $valid = false;
+        try {
+            $valid = $user->findByEmail($email)
+                && $user->is_active
+                && $user->role === 'admin'
+                && $user->verifyPassword($password);
+        } catch (Exception $e) {
+            Logger::error('Admin login DB error: ' . $e->getMessage());
+            $error = 'Login is temporarily unavailable.';
+        }
+
+        if ($valid) {
+            session_regenerate_id(true);
+            unset($_SESSION['login_failures'], $_SESSION['login_locked_until']);
+            $_SESSION['admin_logged_in'] = true;
+            $_SESSION['admin_user_id'] = $user->id;
+            $_SESSION['admin_email'] = $user->email;
+            $_SESSION['admin_name'] = $user->name;
+            $_SESSION['admin_role'] = $user->role;
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            $user->updateLastLogin();
+            Logger::info("Admin panel login: {$user->email}");
+            header('Location: dashboard.php');
+            exit;
+        }
+
+        if (!$error) {
+            $_SESSION['login_failures'] = ($_SESSION['login_failures'] ?? 0) + 1;
+            Logger::warning('Failed admin login for ' . $email . ' from ' . ($_SERVER['REMOTE_ADDR'] ?? '?'));
+            usleep(400000); // slow down guessing
+            if ($_SESSION['login_failures'] >= MAX_ATTEMPTS) {
+                $_SESSION['login_locked_until'] = time() + LOCKOUT_SECONDS;
+                $_SESSION['login_failures'] = 0;
+            }
+            $error = 'Invalid email or password';
+        }
     }
 }
 ?>
@@ -53,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Login Form -->
         <div class="bg-white rounded-2xl shadow-2xl p-8">
-            <form method="POST" class="space-y-6">
+            <form method="POST" class="space-y-6" autocomplete="on">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <!-- Email Field -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -68,9 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             id="email"
                             name="email"
                             required
-                            value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : 'admin@hilyoon.com' ?>"
+                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                            autocomplete="username"
                             class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="admin@hilyoon.com"
+                            placeholder="you@company.com"
                         >
                     </div>
                 </div>
@@ -89,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             id="password"
                             name="password"
                             required
-                            value="admin123"
+                            autocomplete="current-password"
                             class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             placeholder="Enter password"
                         >
@@ -117,18 +168,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Sign In to Dashboard
                 </button>
             </form>
-        </div>
-
-        <!-- Demo Info -->
-        <div class="mt-8 bg-white bg-opacity-20 rounded-xl p-6 text-center">
-            <h3 class="text-lg font-medium text-white mb-2">
-                <i class="fas fa-key mr-2"></i>
-                Demo Login
-            </h3>
-            <div class="text-indigo-100 space-y-1">
-                <p><strong>Email:</strong> admin@hilyoon.com</p>
-                <p><strong>Password:</strong> admin123</p>
-            </div>
         </div>
 
         <!-- Features -->

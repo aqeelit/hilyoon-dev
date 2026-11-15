@@ -339,11 +339,9 @@ DELIMITER ;
 -- DEFAULT DATA INSERTS
 -- =====================================================
 
--- Default users (password: admin123, editor123, viewer123)
-INSERT INTO users (email, password_hash, name, role, is_active) VALUES
-('admin@hilyoon.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin User', 'admin', TRUE),
-('editor@hilyoon.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Content Editor', 'editor', TRUE),
-('viewer@hilyoon.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Content Viewer', 'viewer', TRUE);
+-- No default users are created here (seeding known passwords is unsafe).
+-- Create the first admin after importing this file:
+--   php backend/scripts/create-admin.php admin@yourdomain.com "Your Name"
 
 -- Default categories for each language
 INSERT INTO blog_categories (name, slug, description, language, color) VALUES

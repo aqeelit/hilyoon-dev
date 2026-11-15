@@ -20,10 +20,8 @@ Copy the updated `backend` folder to: `C:\xampp\htdocs\hilyoon-backend\`
 ### 3. Test Admin Login
 
 1. **Visit**: http://localhost/hilyoon-backend/admin/login.php
-2. **Credentials**: 
-   - Admin: admin@hilyoon.com / admin123
-   - Editor: editor@hilyoon.com / editor123
-   - Viewer: viewer@hilyoon.com / viewer123
+2. **Credentials**: no default users exist. Create an admin first:
+   `php backend/scripts/create-admin.php you@company.com "Your Name"`
 
 ## ✨ Features
 

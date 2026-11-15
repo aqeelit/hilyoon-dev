@@ -92,9 +92,7 @@ frontend/src/
 - ✅ **Analytics**: Data available via dashboard API
 
 ### **Demo Credentials (API Access)**
-- **Admin**: admin@hilyoon.com / admin123
-- **Editor**: editor@hilyoon.com / editor123
-- **Viewer**: viewer@hilyoon.com / viewer123
+- No default users exist; create one with `php backend/scripts/create-admin.php you@company.com "Your Name"`
 
 ---
 

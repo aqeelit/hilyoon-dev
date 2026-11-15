@@ -172,8 +172,35 @@ function base64UrlDecode($data) {
     return base64_decode(strtr($data, '-_', '+/') . str_repeat('=', (4 - strlen($data) % 4) % 4));
 }
 
+/** 'production' unless config/env.php (or the environment) says otherwise. */
+function appEnv() {
+    return config('APP_ENV', 'production');
+}
+
+/**
+ * Read a required secret from config. There are no built-in fallbacks: a missing,
+ * short, or known/published value stops the request instead of silently running insecurely.
+ */
+function requireSecret($key) {
+    $known_public = [
+        'hilyoon_jwt_secret_key_2025_change_in_production',
+        'hilyoon_blog_automation_2024',
+    ];
+    $value = (string)config($key, '');
+    if (strlen($value) < 32 || in_array($value, $known_public, true) || stripos($value, 'change') !== false) {
+        Logger::error("Security: {$key} is not configured. Set it in backend/config/env.php (see env.example.php).");
+        if (php_sapi_name() === 'cli') {
+            fwrite(STDERR, "{$key} is not configured. Set it in backend/config/env.php
+");
+            exit(1);
+        }
+        APIResponse::error('Server is not configured', 500);
+    }
+    return $value;
+}
+
 function jwtSecret() {
-    return config('JWT_SECRET', 'hilyoon_jwt_secret_key_2025_change_in_production');
+    return requireSecret('JWT_SECRET');
 }
 
 function generateToken(array $user, $ttl = null) {

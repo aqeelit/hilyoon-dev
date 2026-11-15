@@ -1,7 +1,25 @@
 <?php
 // Database Configuration for Hilyoon SaaS Platform
+
+/**
+ * Settings lookup that works everywhere: real environment variables (Docker),
+ * $_ENV, then the git-ignored config/env.php (local XAMPP), then the default.
+ */
+function dbSetting($key, $default) {
+    static $file = null;
+    if ($file === null) {
+        $path = __DIR__ . '/env.php';
+        $file = file_exists($path) ? (array)(include $path) : [];
+    }
+    $env = getenv($key);
+    if ($env !== false && $env !== '') return $env;
+    if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+    return $file[$key] ?? $default;
+}
+
 class Database {
     private $host;
+    private $port;
     private $db_name;
     private $username;
     private $password;
@@ -9,10 +27,11 @@ class Database {
 
     public function __construct() {
         // Load environment variables or set defaults
-        $this->host = $_ENV['DB_HOST'] ?? 'localhost';
-        $this->db_name = $_ENV['DB_NAME'] ?? 'hilyoon_saas';
-        $this->username = $_ENV['DB_USER'] ?? 'root';
-        $this->password = $_ENV['DB_PASS'] ?? '';
+        $this->host = dbSetting('DB_HOST', 'localhost');
+        $this->port = (int)dbSetting('DB_PORT', 3306);
+        $this->db_name = dbSetting('DB_NAME', 'hilyoon_saas');
+        $this->username = dbSetting('DB_USER', 'root');
+        $this->password = dbSetting('DB_PASS', '');
     }
 
     /**
@@ -23,7 +42,7 @@ class Database {
         $this->conn = null;
 
         try {
-            $dsn = "mysql:host=" . $this->host . ";dbname=" . $this->db_name . ";charset=utf8mb4";
+            $dsn = "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";charset=utf8mb4";
             
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

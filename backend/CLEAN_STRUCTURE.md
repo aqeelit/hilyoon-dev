@@ -66,7 +66,7 @@ backend/
 
 1. **🔐 Simple Login System**
    - **URL**: `http://localhost/hilyoon-backend/admin/`
-   - **Credentials**: `admin@hilyoon.com` / `admin123`
+   - **Credentials**: create one with `php backend/scripts/create-admin.php you@company.com "Your Name"`
    - **Technology**: PHP Sessions (no JWT complexity)
 
 2. **📊 Complete Admin Dashboard**
@@ -109,7 +109,7 @@ backend/
 ```
 URL:      http://localhost/hilyoon-backend/admin/
 Email:    admin@hilyoon.com
-Password: admin123
+Password: (set with backend/scripts/create-admin.php)
 ```
 
 ### Step 4: Explore Features

@@ -22,7 +22,7 @@ OR:  http://localhost/hilyoon-backend/admin/index.php
 ### **Step 2: Use These Credentials**
 ```
 Email:    admin@hilyoon.com
-Password: admin123
+Password: (set with backend/scripts/create-admin.php)
 ```
 
 ### **Step 3: Access Dashboard**
@@ -42,7 +42,7 @@ Password: admin123
 
 ### ✅ **Authentication:**
 - **Simple PHP Sessions** - No complex JWT needed
-- **Hardcoded Admin** - admin@hilyoon.com / admin123
+- **Database Admin** - users with role `admin`; create one with `php backend/scripts/create-admin.php you@company.com "Your Name"`
 - **Auto-redirect** - Login → Dashboard flow works
 - **Logout Function** - Clean session termination
 
@@ -56,7 +56,7 @@ Password: admin123
 1. **Start XAMPP** (Apache + MySQL)
 2. **Import Database**: Import `sql/hilyoon.sql` in phpMyAdmin
 3. **Access Admin**: `http://localhost/hilyoon-backend/admin/`
-4. **Login**: admin@hilyoon.com / admin123
+4. **Login**: with the admin you created via `backend/scripts/create-admin.php`
 5. **Dashboard**: All features should load instantly
 
 ## ✨ **SIMPLIFIED ARCHITECTURE:**

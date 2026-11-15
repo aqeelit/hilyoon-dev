@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker image
+  output: 'standalone',
+
   // Remove any experimental turbo config
   
   // Optimize images

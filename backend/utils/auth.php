@@ -20,9 +20,9 @@ function config($key, $default = null) {
         $path = __DIR__ . '/../config/env.php';
         $file_config = file_exists($path) ? (array)(include $path) : [];
     }
-    if (isset($_ENV[$key])) return $_ENV[$key];
     $env = getenv($key);
-    if ($env !== false) return $env;
+    if ($env !== false && $env !== '') return $env;
+    if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
     return $file_config[$key] ?? $default;
 }
 

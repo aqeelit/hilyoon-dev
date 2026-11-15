@@ -100,7 +100,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      MARIADB_PWD: ${DB_ROOT_PASSWORD}
+      MYSQL_PWD: ${DB_ROOT_PASSWORD}  # read by mariadb-dump
     entrypoint: ["/bin/sh", "/backup.sh"]
     volumes:
       - ./deploy/backup.sh:/backup.sh:ro

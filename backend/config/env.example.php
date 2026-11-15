@@ -1,6 +1,7 @@
 <?php
 // Environment Configuration for Hilyoon Backend
-// Copy this to .env and update with your actual values
+// Copy this file to config/env.php (git-ignored) and fill in real values.
+// Generate secrets with:  php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
 
 return [
     // Database Configuration
@@ -11,7 +12,8 @@ return [
     'DB_PORT' => 3306,
 
     // JWT Configuration
-    'JWT_SECRET' => 'hilyoon_jwt_secret_key_2025_change_in_production',
+    // REQUIRED: 64-char random hex. The API refuses to start without it.
+    'JWT_SECRET' => '',
     'JWT_EXPIRATION' => 86400, // 24 hours
 
     // API Configuration
@@ -46,6 +48,8 @@ return [
     'LOG_FILE' => __DIR__ . '/logs/api.log',
 
     // Security
+    // REQUIRED for HTTP-triggered blog automation (sent as X-Cron-Key header)
+    'CRON_SECRET' => '',
     'BCRYPT_ROUNDS' => 12,
     'SESSION_LIFETIME' => 86400, // 24 hours
     'CORS_ORIGINS' => ['http://localhost:3000'],
@@ -53,7 +57,7 @@ return [
     // Application
     'APP_NAME' => 'Hilyoon SaaS',
     'APP_VERSION' => '1.0.0',
-    'APP_ENV' => 'development', // development, production
+    'APP_ENV' => 'production', // 'development' enables dev-only pages locally
     'DEBUG' => true,
     'TIMEZONE' => 'UTC',
 

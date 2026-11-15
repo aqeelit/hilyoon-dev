@@ -47,9 +47,8 @@
                         </a>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4">
-                        <p class="text-sm text-gray-600"><strong>Login Credentials:</strong></p>
-                        <p class="font-mono text-sm">Email: admin@hilyoon.com</p>
-                        <p class="font-mono text-sm">Password: admin123</p>
+                        <p class="text-sm text-gray-600"><strong>First admin:</strong></p>
+                        <p class="font-mono text-sm">php backend/scripts/create-admin.php you@company.com "Your Name"</p>
                     </div>
                 </div>
                 <a href="admin/" class="inline-flex items-center mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">

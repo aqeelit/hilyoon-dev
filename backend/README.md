@@ -159,8 +159,8 @@ DB_PASS=
 ### 3. Access Admin Dashboard
 ```
 URL: http://localhost/hilyoon-backend/admin/complete-dashboard.php
-Login: admin@hilyoon.com
-Password: admin123
+Create the first admin:
+  php backend/scripts/create-admin.php you@company.com "Your Name"
 ```
 
 ## 📊 Admin Dashboard Features
@@ -221,8 +221,8 @@ const response = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        email: 'admin@hilyoon.com',
-        password: 'admin123'
+        email: 'you@company.com',
+        password: '<your password>'
     })
 });
 
@@ -388,7 +388,7 @@ const aiGeneration = await fetch('/api/admin/complete?action=ai-generate', {
    - Verify PHP execution permissions
 
 4. **Login Issues**
-   - Default admin: admin@hilyoon.com / admin123
+   - No default admin exists; create one with backend/scripts/create-admin.php
    - Clear browser cache and cookies
    - Check JWT token expiration
 

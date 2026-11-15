@@ -1,5 +1,10 @@
 <?php
-// Simple test script to verify the admin system
+// Simple test script to verify the admin system (development only)
+require_once __DIR__ . '/utils/auth.php';
+if (appEnv() !== 'development') {
+    http_response_code(404);
+    exit;
+}
 echo "<h1>🚀 Hilyoon Admin System - Test Status</h1>";
 
 // Check if files exist
@@ -37,8 +42,7 @@ if (file_exists('config/database.php')) {
 echo "<h2>🔐 Login Information:</h2>";
 echo "<div style='background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;'>";
 echo "<strong>URL:</strong> <a href='admin/'>http://localhost/hilyoon-backend/admin/</a><br>";
-echo "<strong>Email:</strong> admin@hilyoon.com<br>";
-echo "<strong>Password:</strong> admin123<br>";
+echo "<strong>First admin:</strong> <code>php backend/scripts/create-admin.php you@company.com \"Your Name\"</code><br>";
 echo "</div>";
 
 echo "<h2>🎯 Next Steps:</h2>";

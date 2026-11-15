@@ -369,8 +369,18 @@ class CronScheduler {
     }
 }
 
-// If called directly (via cron), execute the job
-if (php_sapi_name() === 'cli' || (isset($_GET['cron_key']) && $_GET['cron_key'] === 'hilyoon_blog_automation_2024')) {
+// Run the job only when this file is the entry point: from the CLI (system cron),
+// or over HTTP with the secret CRON_SECRET from config/env.php (compared in constant time).
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    $authorized = php_sapi_name() === 'cli';
+    if (!$authorized) {
+        $provided = (string)($_SERVER['HTTP_X_CRON_KEY'] ?? $_GET['cron_key'] ?? '');
+        $authorized = $provided !== '' && hash_equals(requireSecret('CRON_SECRET'), $provided);
+    }
+    if (!$authorized) {
+        http_response_code(403);
+        exit('Forbidden');
+    }
     $scheduler = new CronScheduler();
     $scheduler->executeScheduledGeneration();
 }

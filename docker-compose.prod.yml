@@ -1,0 +1,120 @@
+# Hilyoon production stack (runs next to PackNAI on the same VPS, /opt/hilyoon).
+#
+#   cp .env.prod.example .env      # fill in real values
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# PackNAI's Caddy terminates HTTPS for both sites and reaches this stack over the shared
+# external "web" network (see DEPLOY.md). The database is only on the private network.
+# Memory limits keep Hilyoon from starving PackNAI on the 4 GB server.
+name: hilyoon
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 512m
+    environment:
+      MARIADB_DATABASE: hilyoon_saas
+      MARIADB_USER: hilyoon
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+    command:
+      - --innodb-buffer-pool-size=128M
+      - --performance-schema=OFF
+      - --max-connections=60
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+      # Schema is applied once, on first start with an empty volume
+      - ./backend/sql/hilyoon.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: hilyoon/backend:${HILYOON_TAG:-latest}
+    build: ./backend
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 256m
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      DB_HOST: db
+      DB_NAME: hilyoon_saas
+      DB_USER: hilyoon
+      DB_PASS: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      CRON_SECRET: ${CRON_SECRET:?set CRON_SECRET in .env}
+      CORS_ORIGINS: https://${DOMAIN:-hilyoon.com}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - blog_images:/var/www/html/public/images/blog
+      - backend_logs:/var/www/html/logs
+    networks:
+      internal: {}
+      web:
+        aliases: [hilyoon-backend]
+
+  frontend:
+    image: hilyoon/frontend:${HILYOON_TAG:-latest}
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_SITE_URL: https://${DOMAIN:-hilyoon.com}
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 384m
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      # Server-side rendering talks to the backend container directly
+      API_INTERNAL_URL: http://backend/api
+    networks:
+      internal: {}
+      web:
+        aliases: [hilyoon-frontend]
+
+  # Daily database dump to the db_backups volume, newest 7 kept (deploy/backup.sh)
+  backup:
+    image: mariadb:11.4
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 128m
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MARIADB_PWD: ${DB_ROOT_PASSWORD}
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    volumes:
+      - ./deploy/backup.sh:/backup.sh:ro
+      - db_backups:/backups
+    networks: [internal]
+
+networks:
+  internal: {}
+  # Shared with PackNAI's Caddy: created once with `docker network create web`
+  web:
+    external: true
+
+volumes:
+  db_data:
+  db_backups:
+  blog_images:
+  backend_logs:

@@ -8,7 +8,7 @@ class OpenAIClient {
     private $db;
 
     public function __construct() {
-        $this->api_key = $_ENV['OPENAI_API_KEY'] ?? 'your-openai-api-key-here';
+        $this->api_key = (string)config('OPENAI_API_KEY', '');
         $this->db = getDB();
     }
 

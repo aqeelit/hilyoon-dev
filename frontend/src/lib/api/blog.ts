@@ -4,6 +4,11 @@ import type { Locale } from '@/types'
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/hilyoon-backend/api'
 
+// Server-side rendering can't use a relative browser URL like "/api"; in Docker it
+// talks to the backend container directly (API_INTERNAL_URL=http://hilyoon-backend/api).
+const SERVER_API_URL = process.env.API_INTERNAL_URL || API_BASE_URL
+const apiBase = () => (typeof window === 'undefined' ? SERVER_API_URL : API_BASE_URL)
+
 // ---- Raw API shapes -------------------------------------------------------
 
 export interface ApiBlogPost {
@@ -66,7 +71,7 @@ async function apiGet<T>(path: string, params: Record<string, string | number | 
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== '') qs.append(key, String(value))
   }
-  const url = `${API_BASE_URL}${path}${qs.size ? `?${qs}` : ''}`
+  const url = `${apiBase()}${path}${qs.size ? `?${qs}` : ''}`
 
   const res = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } })
   let body: Envelope<T>

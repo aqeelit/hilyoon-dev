@@ -1,0 +1,6 @@
+config/env.php
+.env
+logs/
+public/images/blog/*
+package-lock.json
+*.md

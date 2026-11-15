@@ -1,0 +1,41 @@
+# Hilyoon site for PackNAI's Caddy (imported from /etc/caddy/sites/*.caddy).
+# Upstreams are reached over the shared "web" Docker network.
+hilyoon.com {
+	log {
+		output stdout
+		format json
+	}
+
+	encode zstd gzip
+
+	request_body {
+		max_size 10MB
+	}
+
+	# PHP backend: JSON API, admin panel, AI-generated blog images
+	@backend path /api /api/* /admin /admin/*
+	handle @backend {
+		reverse_proxy hilyoon-backend:80
+	}
+	handle /images/blog/* {
+		rewrite * /public{path}
+		reverse_proxy hilyoon-backend:80
+	}
+
+	# Everything else: Next.js website
+	handle {
+		reverse_proxy hilyoon-frontend:3000
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# One canonical host
+www.hilyoon.com {
+	redir https://hilyoon.com{uri} permanent
+}
